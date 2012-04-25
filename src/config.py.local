@@ -1,0 +1,20 @@
+'''
+Created on 2012-01-29
+
+@author: pawel
+'''
+
+folderToBackup    = '/home/user/' 
+storeBackupFolder = '/home/user/.tmp/enc-backup/'
+settingsPath      = '/home/user/encbackup/data/stats.dat'
+passphrasePath    = '/home/user/encbackup/data/passphrase.txt'
+dataPath          = '/home/user/encbackup/data/'
+updateBackupEvery = 3 * 24 * 3600
+excludePatterns   = ['*~', '*.bak' , '*.old', '*/cache/*', '*/Cache/*'
+    '/home/*/.thumbnails', 
+    '/home/*/.local/share/Trash', 
+    '/home/*/.gvfs',
+    '/home/*/Dropbox',
+mirrorTo = {
+    'ftp1' : 'ftp://user@ftpserver.com',
+}
