@@ -11,8 +11,9 @@ import fnmatch
 import datetime
 import shutil
 import glob
+import sys
 
-class AlternativeBackupJob(object):
+class BasicBackupJob(object):
     
     def __init__( self, logger, nameManager, backupProvider, synchronizer, updateEvery, dataFolder ):
         self.logger = logger
@@ -40,7 +41,7 @@ class AlternativeBackupJob(object):
                             self.backupModifiedFiles(path, excludePatterns, settings)
                         else:
                             self.logger.log('skipping symbolic link ' + path)
-                    except:
+                    except IOError:
                         self.logger.log('could not enter directory: ' + path)
                 elif os.path.isfile(path):
                     try:
@@ -50,10 +51,8 @@ class AlternativeBackupJob(object):
                             self.backupProvider.backup(path, dstName)
                             self.archivedFilesSize += size
                             self.archivedFilesCount += 1
-                        #else:
-                        #    print 'ignoring untouched file', path                            
-                    except:
-                        self.logger.log('could not read:' + path)
+                    except IOError:
+                        self.logger.log('could not encrypt: ' + path)
                 else:
                     raise Exception('skipping strange file: {0}'.format(path))
             else:
@@ -107,13 +106,28 @@ class AlternativeBackupJob(object):
         self.backupProvider.restore('0', tempSettingsFile)
         settings = self.loadSettings(tempSettingsFile)
         os.remove(tempSettingsFile)
+        errors = []
         for path in settings['mapping'] :
-            self.logger.log('restoring ' + path)
-            dst = outputFolder + path
-            parent = os.path.dirname(dst)
-            if not os.path.exists(parent):
-                os.makedirs(parent)
-            self.backupProvider.restore(settings['mapping'][path]['filename'], dst)
+            try:
+                self.logger.log('restoring ' + path)
+                dst = outputFolder + path
+                parent = os.path.dirname(dst)
+                if not os.path.exists(parent):
+                    os.makedirs(parent)
+                self.backupProvider.restore(settings['mapping'][path]['filename'], dst)
+            except IOError:
+                msg = 'there was a problem with restoring {src} to {dst}: {exc}'.format(
+                    src=settings['mapping'][path]['filename'],
+                    dst=path,
+                    exc=sys.exc_info()[1]
+                )
+                self.logger.log(msg)
+                errors.append(msg)
+        
+        self.logger.log('Problems during restore:')
+        for error in errors:
+            self.logger.log(error)
+                
 
     def listFiles(self, settingsFile):
         settings = self.loadSettings(settingsFile)

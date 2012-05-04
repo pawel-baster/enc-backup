@@ -10,16 +10,16 @@ import random
 import base64
 import filecmp
 
-from encbackup.numberNameManager import NumberNameManager
-from encbackup.alternativeBackupJob import AlternativeBackupJob
-from encbackup.encryptedBackupProvider import EncryptedBackupProvider
-from encbackup.simpleLogger import SimpleLogger
-from encbackup.lftpMirror import LftpMirror
+from src.subDirNumberNameManager import SubDirNumberNameManager
+from src.basicBackupJob import BasicBackupJob
+from src.encryptedBackupProvider import EncryptedBackupProvider
+from src.simpleLogger import SimpleLogger
+from src.lftpMirror import LftpMirror
 
-class AlternativeBackupJobTest1(unittest.TestCase):
+class AlternativeBackupJobAndSubDirNumberNameManager(unittest.TestCase):
 
     def setUp(self):        
-        self.root = '/home/pawel/Dokumenty/Projekty/python/enc-backup/test/fixture/alternativeBackupJobTest1/'
+        self.root = os.path.dirname( __file__ )  + os.path.sep + 'fixtures' + os.path.sep + 'AlternativeBackupJobAndSubDirNumberNameManager' + os.path.sep
         if (os.path.exists(self.root)):
             shutil.rmtree(self.root)
         os.mkdir(self.root)
@@ -29,9 +29,9 @@ class AlternativeBackupJobTest1(unittest.TestCase):
         
         passphrase = self._createRandomFile(self.root, '_passphrase')
         logger = SimpleLogger() 
-        self.backup = AlternativeBackupJob(
+        self.backup = BasicBackupJob(
             logger,
-            NumberNameManager(), 
+            SubDirNumberNameManager(), 
             EncryptedBackupProvider(logger, self.root + 'data', passphrase),
             LftpMirror(logger, {}, ''),
             0,
