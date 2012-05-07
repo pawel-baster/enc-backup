@@ -5,8 +5,10 @@ Created on 2012-01-11
 '''
 
 import zlib
+from backupProviderInterface import BackupProviderInterface
 
-class ZipBackupProvider:
+
+class ZipBackupProvider(BackupProviderInterface):
   
     def __init__(self, backupFolder):
         self.backupFolder = backupFolder

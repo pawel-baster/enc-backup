@@ -4,10 +4,10 @@ Created on 2012-04-01
 @author: pawel
 '''
 import subprocess
-import sys
 import time
+from synchronizerInterface import SynchronizerInterface
 
-class LftpMirror(object):
+class LftpSynchronizer(SynchronizerInterface):
 
     def __init__(self, logger, targets, backupFolder):
         self.logger = logger
@@ -34,6 +34,7 @@ class LftpMirror(object):
                 if p.returncode == 0:
                     self.logger.log('OK')
                     settings['synchronized'][name] = int(time.time())
+                    settings['lastSynchronized'][name] = int(time.time())
                 else:
                     self.logger.log('synchronization failed for ' + name)
             else:

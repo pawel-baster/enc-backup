@@ -6,10 +6,10 @@ Created on 2012-01-11
 
 import sys
 
-from basicBackupJob import BasicBackupJob
-from numberNameManager import NumberNameManager
-from encryptedBackupProvider import EncryptedBackupProvider
-from lftpMirror import LftpMirror
+from controllers.basicBackupController import BasicBackupController
+from names.numberNameManager import NumberNameManager
+from savers.encryptedBackupProvider import EncryptedBackupProvider
+from synchronizers.lftpSynchronizer import LftpSynchronizer
 from simpleLogger import SimpleLogger
 import config
 
@@ -22,31 +22,31 @@ if __name__ == '__main__':
         sys.exit()     
      
     if sys.argv[1] == 'backup' :
-        backup = BasicBackupJob(
+        backup = BasicBackupController(
             logger,
             NumberNameManager(),
             EncryptedBackupProvider(logger, config.storeBackupFolder, config.passphrasePath),
-            LftpMirror(logger, config.mirrorTo, config.storeBackupFolder),
+            LftpSynchronizer(logger, config.mirrorTo, config.storeBackupFolder),
             config.updateBackupEvery,
             config.dataPath)
         config.excludePatterns.append(config.storeBackupFolder);        
-        backup.runBackup(config.folderToBackup, config.excludePatterns, config.settingsPath)
+        backup.runBackup(config.foldersToBackup, config.excludePatterns, config.settingsPath)
     elif sys.argv[1] == 'ls' :
-        backup = BasicBackupJob(
+        backup = BasicBackupController(
             logger,
             NumberNameManager(), 
             EncryptedBackupProvider(logger, config.storeBackupFolder, config.passphrasePath),
-            LftpMirror(logger, config.mirrorTo, config.storeBackupFolder),
+            LftpSynchronizer(logger, config.mirrorTo, config.storeBackupFolder),
             config.updateBackupEvery,
             config.dataPath)
         backup.listFiles(config.settingsPath)
     elif sys.argv[1] == 'restore' :
         if len(sys.argv) == 5:
-            backup = BasicBackupJob(
+            backup = BasicBackupController(
                 logger,
                 NumberNameManager(), 
                 EncryptedBackupProvider(logger, sys.argv[2], sys.argv[4]),
-                LftpMirror(logger, '', ''),
+                LftpSynchronizer(logger, '', ''),
                 0,
                 '/tmp')
             backup.runRestore(sys.argv[3])

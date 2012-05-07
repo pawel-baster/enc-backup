@@ -10,7 +10,7 @@ import math
 
 from numberNameManager import NumberNameManager
 
-class SubDirNumberNameManager (NumberNameManager):
+class SubDirNumberNameManager(NumberNameManager):
     
     def encodeName(self, path, settings):
         now = int(time.time())  

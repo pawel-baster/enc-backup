@@ -10,18 +10,18 @@ import math
 
 from nameManagerInterface import NameManagerInterface
 
-class NumberNameManager (NameManagerInterface):
+class NumberNameManager(NameManagerInterface):
     
-    def encodeName(self, path, settings):
+    def encodeName(self, path, mapping):
         now = int(time.time())  
-        if path not in settings['mapping']:
-            settings['lastId'] = settings['lastId'] + 1
-            settings['mapping'][path] = {
-                'filename' : hex(settings['lastId']),
+        if path not in mapping:
+            mapping['lastId'] = mapping['lastId'] + 1
+            mapping['mapping'][path] = {
+                'filename' : hex(mapping['lastId']),
                 'nextCheck' : now + int(24*3600*(1 + 90/math.ceil(float(os.path.getsize(path)+1)/100000)))
             }
                 
-        return settings['mapping'][path]['filename']
+        return mapping['mapping'][path]['filename']
 
     def decodeName(self, name, settings):
         for path in settings['mapping']:

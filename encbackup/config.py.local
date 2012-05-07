@@ -4,7 +4,7 @@ Created on 2012-01-29
 @author: pawel
 '''
 
-folderToBackup    = '/home/user/' 
+foldersToBackup    = ['/home/user/'] 
 storeBackupFolder = '/home/user/.tmp/enc-backup/'
 settingsPath      = '/home/user/encbackup/data/stats.dat'
 passphrasePath    = '/home/user/encbackup/data/passphrase.txt'

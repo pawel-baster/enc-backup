@@ -7,8 +7,9 @@ Created on 2012-01-11
 import os
 import subprocess
 import shlex 
+from backupProviderInterface import BackupProviderInterface
 
-class EncryptedBackupProvider:
+class EncryptedBackupProvider(BackupProviderInterface):
   
     def __init__(self, logger, backupFolder, passphrasePath):
         self.logger = logger
@@ -45,7 +46,7 @@ class EncryptedBackupProvider:
             fd=os.open(self.passphrasePath, os.O_RDONLY)
             cmd='gpg --no-tty --passphrase-fd {fd}'.format(fd=fd)
             self._createDirsForFile(dst)
-            with open(self.backupFolder + os.path.sep + src, 'r') as stdin_fh:
+            with open(os.path.join(self.backupFolder, src), 'r') as stdin_fh:
                 with open(dst, 'w') as stdout_fh:        
                     proc=subprocess.Popen(shlex.split(cmd), stdin=stdin_fh, stdout=stdout_fh)        
                     proc.communicate()
