@@ -37,7 +37,8 @@ class BasicBackupController(ControllerInterface):
 
     def runBackup(self, inputFolders, outputFolder, excludePatterns, updateEvery) :
         if not self._isLocked():
-            stats = self._loadSettingsFile(self.statsFilePath, {'lastSearch' : 0, 'synchronized' : {},
+            stats = self._loadSettingsFile(self.statsFilePath, {'lastSearch' : 0, 
+                                                                'synchronized' : {},
                                                                 'lastSynchronized' : {}})
             if stats['lastSearch'] + updateEvery > self.timestamp:
                 self.logger.log('backup not necessary at this moment')
@@ -53,6 +54,7 @@ class BasicBackupController(ControllerInterface):
                         self.cleanup(excludePatterns, mapping)
                         for key in stats['synchronized'].keys():
                             del stats['synchronized'][key]
+                        self.synchronizer.synchronize(stats)
                         self._saveSettingsFile(self.statsFilePath, self.statsBackupFileName, stats)
                         self._saveSettingsFile(self.mappingFilePath, self.mappingBackupFileName, mapping)
                     else:
@@ -179,4 +181,8 @@ class BasicBackupController(ControllerInterface):
                         self.logger.log('problems while testing file ' + path)
                     
         self._saveSettingsFile(self.mappingFilePath, self.mappingBackupFileName, mapping)
+        
+    def __del__(self):
+        self._releaseLock()
+    
         

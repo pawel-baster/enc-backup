@@ -7,7 +7,7 @@ Created on 2012-01-11
 import sys
 
 from controllers.basicBackupController import BasicBackupController
-from names.numberNameManager import NumberNameManager
+from names.subDirNumberNameManager import SubDirNumberNameManager
 from savers.encryptedBackupProvider import EncryptedBackupProvider
 from synchronizers.lftpSynchronizer import LftpSynchronizer
 from simpleLogger import SimpleLogger
@@ -24,27 +24,28 @@ if __name__ == '__main__':
     if sys.argv[1] == 'backup' :
         backup = BasicBackupController(
             logger,
-            NumberNameManager(),
+            SubDirNumberNameManager(),
             EncryptedBackupProvider(logger, config.storeBackupFolder, config.passphrasePath),
             LftpSynchronizer(logger, config.mirrorTo, config.storeBackupFolder),
-            config.updateBackupEvery,
             config.dataPath)
         config.excludePatterns.append(config.storeBackupFolder);        
-        backup.runBackup(config.foldersToBackup, config.excludePatterns, config.settingsPath)
+        backup.runBackup(config.foldersToBackup, config.storeBackupFolder, config.excludePatterns, config.updateBackupEvery)
+
     elif sys.argv[1] == 'ls' :
+        raise Exception('requires refactoring')
         backup = BasicBackupController(
             logger,
-            NumberNameManager(), 
+            SubDirNumberNameManager(), 
             EncryptedBackupProvider(logger, config.storeBackupFolder, config.passphrasePath),
             LftpSynchronizer(logger, config.mirrorTo, config.storeBackupFolder),
             config.updateBackupEvery,
             config.dataPath)
-        backup.listFiles(config.settingsPath)
+       # backup.listFiles(config.settingsPath)
     elif sys.argv[1] == 'restore' :
         if len(sys.argv) == 5:
             backup = BasicBackupController(
                 logger,
-                NumberNameManager(), 
+                SubDirNumberNameManager(), 
                 EncryptedBackupProvider(logger, sys.argv[2], sys.argv[4]),
                 LftpSynchronizer(logger, '', ''),
                 0,

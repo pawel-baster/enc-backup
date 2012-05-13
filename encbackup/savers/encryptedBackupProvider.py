@@ -15,6 +15,8 @@ class EncryptedBackupProvider(BackupProviderInterface):
         self.logger = logger
         self.backupFolder = backupFolder
         self.passphrasePath = passphrasePath
+        if not os.path.exists(passphrasePath):
+            raise Exception('Could not find a file: ' + passphrasePath)
   
     def getBackupFolder(self):
         return self.backupFolder
@@ -22,8 +24,8 @@ class EncryptedBackupProvider(BackupProviderInterface):
     def backup(self, srcName, dstName) :
         try:
             # TODO: remove os-specific /
-            dst = self.backupFolder + os.path.sep + dstName
             fd=os.open(self.passphrasePath, os.O_RDONLY)
+            dst = os.path.join(self.backupFolder, dstName)            
             cmd='gpg --no-tty --force-mdc --passphrase-fd {fd} -c'.format(fd=fd)
             self._createDirsForFile(dst)
             with open(srcName, 'r') as stdin_fh:
