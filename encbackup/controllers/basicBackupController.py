@@ -34,6 +34,7 @@ class BasicBackupController(ControllerInterface):
         self.mappingBackupFileName = '0x0'
         self.statsBackupFileName = '0x1'
         self.lockFileName = os.path.join(dataFolder, datetime.datetime.today().strftime('%Y%m%d.lock'))
+        self._errors = []
 
     def runBackup(self, inputFolders, outputFolder, excludePatterns, updateEvery) :
         if not self._isLocked():
@@ -44,34 +45,36 @@ class BasicBackupController(ControllerInterface):
                 self.logger.log('backup not necessary at this moment')
             else:
                 mapping = self._loadSettingsFile(self.mappingFilePath, {'lastId' : 2, 'mapping' : {}})
+                self.logger.log('last successful backup at {0}'.format(datetime.datetime.fromtimestamp(stats['lastSearch']).strftime('%Y-%m-%d %H:%M:%S')))
                 for inputFolder in inputFolders:
                     if os.access(inputFolder, os.R_OK):
-                        self.logger.log('last successful backup at {0}'.format(datetime.datetime.fromtimestamp(stats['lastSearch']).strftime('%Y-%m-%d %H:%M:%S')))
                         self._backupModifiedFiles(inputFolder, excludePatterns, stats, mapping)
-                        stats['lastSearch'] = self.timestamp            
-                        print 'archived files %d (%d B)' % (self.archivedFilesCount, self.archivedFilesSize)
-                        print 'number of stored elements %d' % self.nameManager.getCount(mapping)
-                        self.cleanup(excludePatterns, mapping)
-                        for key in stats['synchronized'].keys():
-                            del stats['synchronized'][key]
-                        self.synchronizer.synchronize(stats)
-                        self._saveSettingsFile(self.statsFilePath, self.statsBackupFileName, stats)
-                        self._saveSettingsFile(self.mappingFilePath, self.mappingBackupFileName, mapping)
                     else:
-                        print 'folder {0} does not exist or is inaccessible.'.format(inputFolder)
+                        raise Exception('folder {0} does not exist or is inaccessible.'.format(inputFolder))
                 
-            self._saveSettingsFile(self.statsFilePath, self.statsBackupFileName, stats)
-            self._saveSettingsFile(self.mappingFilePath, self.mappingBackupFileName, mapping)
+                stats['lastSearch'] = self.timestamp            
+                print 'archived files %d (%d B)' % (self.archivedFilesCount, self.archivedFilesSize)
+                print 'number of stored elements %d' % self.nameManager.getCount(mapping)
+                self.cleanup(excludePatterns, mapping)
+                for key in stats['synchronized'].keys():
+                    del stats['synchronized'][key]
+                    
+                self._saveSettingsFile(self.mappingFilePath, self.mappingBackupFileName, mapping)
+                
+            self.synchronizer.synchronize(stats)
+            self._saveSettingsFile(self.statsFilePath, self.statsBackupFileName, stats)            
+                
             self._releaseLock()
         else:
             self.logger.log('Could not acquire lock')
+            
+        self._printErrors()
     
     def runRestore(self, backupFolder, outputFolder) :
         tempSettingsFile = self.mappingFilePath
         self.backupProvider.restore(self.mappingBackupFileName, tempSettingsFile)
         mapping = self._loadSettingsFile(tempSettingsFile, None)
         os.remove(tempSettingsFile)
-        errors = []
         for path in mapping['mapping'] :
             try:
                 self.logger.log('restoring ' + path)
@@ -87,13 +90,16 @@ class BasicBackupController(ControllerInterface):
                     exc=sys.exc_info()[1]
                 )
                 self.logger.log(msg)
-                errors.append(msg)
+                self._errors.append(msg)
         
-        if len(errors) > 0:
-            self.logger.log('Problems during restore:')
-            for error in errors:
-                self.logger.log(error)
+        self._printErrors()
                 
+    def _printErrors(self):
+        if len(self._errors) > 0:
+            self.logger.log('Problems:')
+            for error in self._errors:
+                self.logger.log(error)
+
 
     def listFiles(self, settingsFile):
         settings = self.loadSettings(settingsFile)
@@ -112,8 +118,11 @@ class BasicBackupController(ControllerInterface):
                             self._backupModifiedFiles(path, excludePatterns, stats, mapping)
                         else:
                             self.logger.log('skipping symbolic link ' + path)
-                    except IOError:
-                        self.logger.log('could not enter directory: ' + path)
+                            self._errors.append('skipping symbolic link ' + path)
+                    except IOError, e:
+                        self.logger.log('could not enter directory: ' + path + ':')
+                        self.logger.log('> %s' % e)
+                        self._errors.append('could not enter directory: ' + path + ': %s' % e)
                 elif os.path.isfile(path):
                     try:
                         size = os.path.getsize(path)
@@ -122,10 +131,11 @@ class BasicBackupController(ControllerInterface):
                             self.backupProvider.backup(path, dstName)
                             self.archivedFilesSize += size
                             self.archivedFilesCount += 1
-                    except IOError:
+                    except IOError, e:
                         self.logger.log('could not encrypt: ' + path)
+                        self._errors.append('could not encrypt ' + path + ': %s' % e )
                 else:
-                    raise Exception('skipping strange file: {0}'.format(path))
+                    self.logger.log('skipping strange file: {0}'.format(path))
             else:
                 self.logger.log('ignoring: ' + path)
         
@@ -179,6 +189,7 @@ class BasicBackupController(ControllerInterface):
                         self.logger.log('cleanup(): deleting a missing file entry:' + path + 'and corresponding file: ' + os.path.basename(backupPath))
                     except:
                         self.logger.log('problems while testing file ' + path)
+                        self._errors.append('problems while testing file ' + path)
                     
         self._saveSettingsFile(self.mappingFilePath, self.mappingBackupFileName, mapping)
         

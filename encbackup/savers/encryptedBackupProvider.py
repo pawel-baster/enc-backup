@@ -41,6 +41,7 @@ class EncryptedBackupProvider(BackupProviderInterface):
         finally:
             os.close(fd)
         
+        assert os.path.exists(dst) and os.path.getsize(dst) > 0, 'File {0} not saved correctly'.format(dst)
         self.logger.log('+ Encrypted {src} and saved as {dst}'.format(src=srcName, dst=dst))
   
     def restore(self, src, dst) :

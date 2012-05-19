@@ -40,7 +40,7 @@ if __name__ == '__main__':
             LftpSynchronizer(logger, config.mirrorTo, config.storeBackupFolder),
             config.updateBackupEvery,
             config.dataPath)
-       # backup.listFiles(config.settingsPath)
+        # backup.listFiles(config.settingsPath)
     elif sys.argv[1] == 'restore' :
         if len(sys.argv) == 5:
             backup = BasicBackupController(
@@ -48,9 +48,8 @@ if __name__ == '__main__':
                 SubDirNumberNameManager(), 
                 EncryptedBackupProvider(logger, sys.argv[2], sys.argv[4]),
                 LftpSynchronizer(logger, '', ''),
-                0,
                 '/tmp')
-            backup.runRestore(sys.argv[3])
+            backup.runRestore(sys.argv[2], sys.argv[3])
         else:
             print 'you need to specify input and output folder and passphrase file path for restore'
     else:  
