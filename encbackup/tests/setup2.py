@@ -6,7 +6,7 @@ BasicBackupController + SubDirNumberNameManager + EncryptedBackupProvider
 @author: pawel
 '''
 import unittest
-from abstractBackupRestoreScenario import AbstractBackupRestoreScenario
+from abstractBackupRestoreScenario import AbstractBackupRestoreScenario, MockSynchronizer
 
 from encbackup.names.subDirNumberNameManager import SubDirNumberNameManager
 from encbackup.controllers.basicBackupController import BasicBackupController
@@ -19,7 +19,7 @@ class Setup2Test(AbstractBackupRestoreScenario, unittest.TestCase):
             logger,
             SubDirNumberNameManager(), 
             EncryptedBackupProvider(logger, dataFolder, passphrase),
-            None,
+            MockSynchronizer(),
             storeFolder)
 
 if __name__ == "__main__":

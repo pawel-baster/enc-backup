@@ -11,6 +11,10 @@ import filecmp
 
 from encbackup.simpleLogger import SimpleLogger
 
+class MockSynchronizer:
+    def synchronize(self, settings):
+        pass
+
 class AbstractBackupRestoreScenario:
 
     def setUp(self):        

@@ -6,7 +6,7 @@ BasicBackupController + NumberNameManager + EncryptedBackupProvider
 @author: pawel
 '''
 import unittest
-from abstractBackupRestoreScenario import AbstractBackupRestoreScenario
+from abstractBackupRestoreScenario import AbstractBackupRestoreScenario, MockSynchronizer
 
 from encbackup.names.numberNameManager import NumberNameManager
 from encbackup.controllers.basicBackupController import BasicBackupController
@@ -19,7 +19,7 @@ class Setup1Test(AbstractBackupRestoreScenario, unittest.TestCase):
             logger,
             NumberNameManager(), 
             EncryptedBackupProvider(logger, dataFolder, passphrase),
-            None,
+            MockSynchronizer(),
             storeFolder)
 
 if __name__ == "__main__":

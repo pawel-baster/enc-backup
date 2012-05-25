@@ -37,7 +37,9 @@ class BasicBackupController(ControllerInterface):
         self._errors = []
 
     def runBackup(self, inputFolders, outputFolder, excludePatterns, updateEvery) :
+        self.locked = False
         if not self._isLocked():
+            self.locked = True;
             stats = self._loadSettingsFile(self.statsFilePath, {'lastSearch' : 0, 
                                                                 'synchronized' : {},
                                                                 'lastSynchronized' : {}})
@@ -132,7 +134,7 @@ class BasicBackupController(ControllerInterface):
                             self.archivedFilesSize += size
                             self.archivedFilesCount += 1
                     except IOError, e:
-                        self.logger.log('could not encrypt: ' + path)
+                        self.logger.log('could not save: ' + path + ': %s' % e)
                         self._errors.append('could not encrypt ' + path + ': %s' % e )
                 else:
                     self.logger.log('skipping strange file: {0}'.format(path))
@@ -194,6 +196,8 @@ class BasicBackupController(ControllerInterface):
         self._saveSettingsFile(self.mappingFilePath, self.mappingBackupFileName, mapping)
         
     def __del__(self):
-        self._releaseLock()
+        # prevent script from releasing someone other instance's lock
+        if (self.locked):
+            self._releaseLock()
     
         
