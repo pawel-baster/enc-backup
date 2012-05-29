@@ -39,8 +39,10 @@ class LftpSynchronizer(SynchronizerInterface):
                 if not self.sslVerification:
                     script = "set ssl:verify-certificate no\n" + script
     
-                p = subprocess.Popen('lftp', stdin=subprocess.PIPE)
-                p.communicate(script)
+                p = subprocess.Popen('lftp', stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                result = p.communicate(script)
+                if result[0]: self.logger.log(result[0])
+                if result[1]: self.logger.log('error: ' + result[1]) 
                 if p.returncode == 0:
                     self.logger.log('OK')
                     settings['synchronized'][name] = int(time.time())

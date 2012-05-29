@@ -45,6 +45,7 @@ class BasicBackupController(ControllerInterface):
                                                                 'lastSynchronized' : {}})
             if stats['lastSearch'] + updateEvery > self.timestamp:
                 self.logger.log('backup not necessary at this moment')
+                self.logger.log('next no sooner than {0}'.format(datetime.datetime.fromtimestamp(stats['lastSearch'] + updateEvery).strftime('%Y-%m-%d %H:%M:%S')))
             else:
                 mapping = self._loadSettingsFile(self.mappingFilePath, {'lastId' : 2, 'mapping' : {}})
                 self.logger.log('last successful backup at {0}'.format(datetime.datetime.fromtimestamp(stats['lastSearch']).strftime('%Y-%m-%d %H:%M:%S')))
