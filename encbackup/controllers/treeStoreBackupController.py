@@ -17,8 +17,7 @@ class TreeNode(object):
                 
     def __eq__(self, other):
         return self.name == other.name and self.lastModified == other.lastModified and self.size == other.size and self.numberOfChildren == other.numberOfChildren
-
-
+    
 class TreeNodeDirectory(TreeNode):
     def __init__(self, name, lastModified, size, numberOfFiles, files):
         TreeNode.__init__(self, name, lastModified, size)
@@ -27,7 +26,20 @@ class TreeNodeDirectory(TreeNode):
         
     def __eq__(self, other):
         return TreeNode.__eq__(self, other) and self.numberOfFiles == other.numberOfFiles and self.files == other.files
-    
+
+    def compare(self, other):
+        '''
+        creates lists of what should be added, removed or updated
+        '''
+        listOfAdded = []
+        listOfRemoved = []
+        listOfModified = []     
+        
+        if self.name != self.name or self.lastModified != other.lastModified or self.size != other.size:
+            pass
+        
+        return (listOfRemoved, listOfAdded, listOfModified)
+        
     def __str__(self):
         string = "Directory: %s (modified: %d, size: %d, number of children: %d) Files:" % (self.name, self.lastModified, self.size, self.numberOfFiles)
         for f in self.files:
@@ -66,7 +78,7 @@ class TreeStoreBackupController(ControllerInterface):
     
     def _createTree(self, root, name, excludePatterns):
         tree = TreeNodeDirectory(name, 0, 0, 0, [])
-        for filename in os.listdir(root):
+        for filename in sorted(os.listdir(root)):
             path = os.path.join(root, filename)
             if not self.isExcluded(path, excludePatterns):
                 if os.path.isdir(path):
