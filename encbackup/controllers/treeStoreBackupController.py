@@ -10,17 +10,17 @@ import os
 from controllerInterface import ControllerInterface
 
 class TreeNode(object):
-    def __init__(self, name, lastModified, size):
-        self.name = name
+    def __init__(self, path, lastModified, size):
+        self.path = path
         self.lastModified = lastModified
         self.size = size
                 
     def __eq__(self, other):
-        return self.name == other.name and self.lastModified == other.lastModified and self.size == other.size and self.numberOfChildren == other.numberOfChildren
+        return self.path == other.path and self.lastModified == other.lastModified and self.size == other.size and self.numberOfChildren == other.numberOfChildren
     
 class TreeNodeDirectory(TreeNode):
-    def __init__(self, name, lastModified, size, numberOfFiles, files):
-        TreeNode.__init__(self, name, lastModified, size)
+    def __init__(self, path, lastModified, size, numberOfFiles, files):
+        TreeNode.__init__(self, path, lastModified, size)
         self.files = files
         self.numberOfFiles = numberOfFiles
         
@@ -31,24 +31,52 @@ class TreeNodeDirectory(TreeNode):
         '''
         creates lists of what should be added, removed or updated
         '''
-        listOfAdded = []
-        listOfRemoved = []
+        listOfOurs = []
+        listOfTheirs = []
         listOfModified = []     
         
-        if self.name != self.name or self.lastModified != other.lastModified or self.size != other.size:
-            pass
+        if self.path != self.path or self.lastModified != other.lastModified or self.size != other.size:
+            print "going in..."
+            i = 0
+            j = 0
+            while i < len(self.files) or j < len(other.files):
+                if i < len(self.files) and j < len(other.files):
+                    print("Comparing %s with %s" % (self.files[i].path, other.files[j].path))
+                else: 
+                    print("Comparing %d with %d" % (i, j))
+                
+                if i >= len(self.files) or (j < len(other.files) and self.files[i].path > other.files[j].path):
+                    if (isinstance(other.files[j], TreeNodeFile)):
+                        listOfTheirs.append(other.files[j])
+                        print("Added %s to listOfTheirs" % other.files[j].path)
+                    else:
+                        raise Exception('not impl')
+                        #listOfTheirs add recursively
+                    
+                    j = j + 1
+                elif j >= len(other.files) or (i < len(self.files) and self.files[i].path < other.files[j].path):
+                    print("Added %s to listOfOurs" % self.files[i].path)
+                    listOfOurs.append(self.files[i])
+                    i = i + 1
+                else: 
+                    print("Deep comparing %s with %s" % (self.files[i].path, other.files[j].path))
+                    listOfModified.append(self.files[i])
+                    i = i + 1
+                    j = j + 1
+        else:
+            print "nodes are identical, skipping recursion"
         
-        return (listOfRemoved, listOfAdded, listOfModified)
+        return (listOfTheirs, listOfOurs, listOfModified)
         
     def __str__(self):
-        string = "Directory: %s (modified: %d, size: %d, number of children: %d) Files:" % (self.name, self.lastModified, self.size, self.numberOfFiles)
+        string = "Directory: %s (modified: %d, size: %d, number of children: %d) Files:" % (self.path, self.lastModified, self.size, self.numberOfFiles)
         for f in self.files:
             string = string + "\n" + str(f)
         return string
 
 class TreeNodeFile(TreeNode):
     def __str__(self):
-        return "File: %s (modified: %d, size: %d)" % (self.name, self.lastModified, self.size)
+        return "File: %s (modified: %d, size: %d)" % (self.path, self.lastModified, self.size)
 
 class TreeStoreBackupController(ControllerInterface):
     '''
@@ -84,7 +112,7 @@ class TreeStoreBackupController(ControllerInterface):
                 if os.path.isdir(path):
                     try:
                         if not os.path.islink(path):
-                            node = self._createTree(path, filename, excludePatterns)
+                            node = self._createTree(path, name + os.path.sep + filename, excludePatterns)
                             if node.numberOfFiles > 0:
                                 tree.size = tree.size + node.size
                                 tree.lastModified = max(tree.lastModified, node.lastModified)
@@ -102,7 +130,7 @@ class TreeStoreBackupController(ControllerInterface):
                         size = os.path.getsize(path)
                         if size > 0:
                             lastModified = os.path.getmtime(path)
-                            node = TreeNodeFile(filename, lastModified, size)
+                            node = TreeNodeFile(name + os.path.sep + filename, lastModified, size)
                             tree.files.append(node)
                             tree.size = tree.size + size
                             tree.lastModified = max(tree.lastModified, lastModified)
