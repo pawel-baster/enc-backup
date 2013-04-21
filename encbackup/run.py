@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Created on 2012-01-11
 
@@ -46,7 +47,7 @@ if __name__ == '__main__':
             if len(sys.argv) == 5:
                 backup = BasicBackupController(
                     logger,
-                    SubDirNumberNameManager(), 
+                    SubDirNumberNameManager2(), 
                     EncryptedBackupProvider(logger, sys.argv[2], sys.argv[4]),
                     LftpSynchronizer(logger, '', ''),
                     '/tmp')

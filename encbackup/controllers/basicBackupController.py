@@ -2,6 +2,11 @@
 Created on 2012-01-11
 
 @author: pawel
+
+possible improvements:
+ * simple version control (e.g. possible to restore last 10 backups) 
+ * create internal ftp mirror
+ * store complete tree and check recursively from the top 
 '''
 
 import os
@@ -35,9 +40,9 @@ class BasicBackupController(ControllerInterface):
         self.statsBackupFileName = '0x1'
         self.lockFileName = os.path.join(dataFolder, datetime.datetime.today().strftime('%Y%m%d.lock'))
         self._errors = []
+        self.locked = False
 
     def runBackup(self, inputFolders, outputFolder, excludePatterns, updateEvery) :
-        self.locked = False
         if not self._isLocked():
             self.locked = True;
             stats = self._loadSettingsFile(self.statsFilePath, {'lastSearch' : 0, 
@@ -96,6 +101,7 @@ class BasicBackupController(ControllerInterface):
                 self._errors.append(msg)
         
         self._printErrors()
+        self.logger.log('restore finished')
                 
     def _printErrors(self):
         if len(self._errors) > 0:

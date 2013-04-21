@@ -60,42 +60,43 @@ class TreeStoreBackupControllerTest(unittest.TestCase):
         self.compareTrees(expectedResult, result)
 
     def testCompareNodes(self):
-        backup = TreeNodeDirectory("root", 1, 1, 4, [
-           TreeNodeDirectory("root/modified", 1, 1, 2, [
+        backup = TreeNodeDirectory("root", 1, 1, 5, [
+           TreeNodeDirectory("root/modified", 1, 1, 3, [
+              TreeNodeFile("root/modified/modified.txt", 1, 1),
               TreeNodeFile("root/modified/size_changed.txt", 1, 1),
-              TreeNodeFile("root/modified/modified.txt", 1, 1)              
+              TreeNodeFile("root/modified/untoched.txt", 1, 1)              
            ]),
-           TreeNodeDirectory("root/not changed", 1, 1, 1, [
-              TreeNodeFile("root/not changes/same.txt", 1, 1)
+           TreeNodeDirectory("root/not_changed", 1, 1, 1, [
+              TreeNodeFile("root/not_changed/same.txt", 1, 1)
            ]),
            TreeNodeDirectory("root/removed", 1, 1, 1, [
-              TreeNodeFile("root/removedremoved.txt", 1, 1)
-           ]),
-           
+              TreeNodeFile("root/removed/removed.txt", 1, 1)
+           ]),           
         ])
         
-        live = TreeNodeDirectory("root", 1, 2, 4, [
+        live = TreeNodeDirectory("root", 1, 2, 5, [
            TreeNodeDirectory("root/added", 1, 2, 2, [
               TreeNodeFile("root/added/added.txt", 1, 2),
            ]),
-           TreeNodeDirectory("root/modified", 1, 2, 2, [
-              TreeNodeFile("root/modifiedsize_changed.txt", 1, 2),
-              TreeNodeFile("root/modifiedmodified.txt", 2, 1)              
+           TreeNodeDirectory("root/modified", 1, 2, 3, [              
+              TreeNodeFile("root/modified/modified.txt", 2, 1),
+              TreeNodeFile("root/modified/size_changed.txt", 1, 2),
+              TreeNodeFile("root/modified/untoched.txt", 1, 1)
            ]),
-           TreeNodeDirectory("root/not changed", 1, 1, 1, [
-              TreeNodeFile("root/not changed/same.txt", 1, 1)
+           TreeNodeDirectory("root/not_changed", 1, 1, 1, [
+              TreeNodeFile("root/not_changed/same.txt", 1, 1)
            ]),                      
         ])
         
         expectedListOfRemoved = ['root/removed/removed.txt']
         expectedListOfAdded = ['root/added/added.txt']
-        expectedListOfModified = ['root/modified/size_changed.txt', 'root/modified/modified.txt']
+        expectedListOfModified = ['root/modified/modified.txt', 'root/modified/size_changed.txt']
         
         (listOfRemoved, listOfAdded, listOfModified) = live.compare(backup)
         extractNameCallback = lambda node: node.path
         assert expectedListOfRemoved == map(extractNameCallback, listOfRemoved), str(expectedListOfRemoved) + " does not equal " + str(map(extractNameCallback, listOfRemoved))
-        assert expectedListOfAdded == map(extractNameCallback, listOfAdded)
-        assert expectedListOfModified == map(extractNameCallback, listOfModified)
+        assert expectedListOfAdded == map(extractNameCallback, listOfAdded), str(expectedListOfAdded) + " does not equal " + str(map(extractNameCallback, listOfAdded))
+        assert expectedListOfModified == map(extractNameCallback, listOfModified), str(expectedListOfModified) + " does not equal " + str(map(extractNameCallback, listOfModified))
 
     def generateTree(self):
         tree = TreeNodeDirectory("root", 60, 8, 2, [
