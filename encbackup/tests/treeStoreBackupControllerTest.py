@@ -60,11 +60,12 @@ class TreeStoreBackupControllerTest(unittest.TestCase):
         self.compareTrees(expectedResult, result)
 
     def testCompareNodes(self):
-        backup = TreeNodeDirectory("root", 1, 1, 5, [
-           TreeNodeDirectory("root/modified", 1, 1, 3, [
+        backup = TreeNodeDirectory("root", 1, 1, 6, [
+           TreeNodeDirectory("root/modified", 1, 1, 4, [
               TreeNodeFile("root/modified/modified.txt", 1, 1),
               TreeNodeFile("root/modified/size_changed.txt", 1, 1),
-              TreeNodeFile("root/modified/untoched.txt", 1, 1)              
+              TreeNodeFile("root/modified/type_changed.txt", 1, 1),
+              TreeNodeFile("root/modified/untoched.txt", 1, 1)                            
            ]),
            TreeNodeDirectory("root/not_changed", 1, 1, 1, [
               TreeNodeFile("root/not_changed/same.txt", 1, 1)
@@ -74,13 +75,16 @@ class TreeStoreBackupControllerTest(unittest.TestCase):
            ]),           
         ])
         
-        live = TreeNodeDirectory("root", 1, 2, 5, [
+        live = TreeNodeDirectory("root", 1, 2, 6, [
            TreeNodeDirectory("root/added", 1, 2, 2, [
               TreeNodeFile("root/added/added.txt", 1, 2),
            ]),
-           TreeNodeDirectory("root/modified", 1, 2, 3, [              
+           TreeNodeDirectory("root/modified", 1, 2, 4, [              
               TreeNodeFile("root/modified/modified.txt", 2, 1),
               TreeNodeFile("root/modified/size_changed.txt", 1, 2),
+              TreeNodeDirectory("root/modified/type_changed.txt", 1, 1, 1, [
+                TreeNodeFile("root/modified/size_changed/new.txt", 1, 2),
+              ]),
               TreeNodeFile("root/modified/untoched.txt", 1, 1)
            ]),
            TreeNodeDirectory("root/not_changed", 1, 1, 1, [
@@ -88,8 +92,8 @@ class TreeStoreBackupControllerTest(unittest.TestCase):
            ]),                      
         ])
         
-        expectedListOfRemoved = ['root/removed/removed.txt']
-        expectedListOfAdded = ['root/added/added.txt']
+        expectedListOfRemoved = ['root/modified/type_changed.txt', 'root/removed/removed.txt']
+        expectedListOfAdded = ['root/added/added.txt', "root/modified/size_changed/new.txt"]
         expectedListOfModified = ['root/modified/modified.txt', 'root/modified/size_changed.txt']
         
         (listOfRemoved, listOfAdded, listOfModified) = live.compare(backup)

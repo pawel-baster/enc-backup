@@ -73,12 +73,12 @@ class TreeNodeDirectory(TreeNode):
                     elif isinstance(self.files[i], TreeNodeFile) and isinstance(other.files[j], TreeNodeFile):
                         if self.files[i].size != other.files[j].size or self.files[i].lastModified != other.files[j].lastModified:
                             listOfModified.append(self.files[i])                            
-                    else: # directory <-> file change
-                        if (isinstance(other.files[j], TreeNodeFile)):
-                            listOfOurs.append(self.files[i])                            
-                        else:
-                            listOfOurs.extend(self.files[i].getAllFiles())
-                        listOfTheirs.append(other.files[j])               
+                    elif isinstance(self.files[i], TreeNodeDirectory) and isinstance(other.files[j], TreeNodeFile):
+                        listOfOurs.extend(self.files[i].getAllFiles())
+                        listOfTheirs.append(other.files[j])
+                    elif isinstance(self.files[i], TreeNodeFile) and isinstance(other.files[j], TreeNodeDirectory):
+                        listOfOurs.append(self.files[i])
+                        listOfTheirs.extend(other.files[j].getAllFiles())
                                     
                     i = i + 1
                     j = j + 1
