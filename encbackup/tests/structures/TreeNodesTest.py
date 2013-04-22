@@ -79,7 +79,7 @@ class TreeNodesTest(unittest.TestCase):
     
     def compareTrees(self, expected, actual):
         assert expected.path == actual.path, "asserting that expected '%s' equals '%s'" % (expected.path, actual.path)
-        assert expected.size == actual.size, "asserting that expected %d equals %d for file %s" % (expected.size, actual.size, actual.name)
+        assert expected.size == actual.size, "asserting that expected %d equals %d for file %s" % (expected.size, actual.size, actual.path)
         assert expected.lastModified == actual.lastModified, "asserting that expected %d equals %d" % (expected.lastModified, actual.lastModified)
         assert expected.__class__.__name__ == actual.__class__.__name__
         if isinstance(expected, TreeNodeDirectory):

@@ -6,6 +6,8 @@ Created on 21-04-2013
 
 import os
 
+from encbackup.helpers.filenameMatcher import FilenameMatcher
+
 class TreeNode(object):
     def __init__(self, path, lastModified, size):
         self.path = path
@@ -20,25 +22,25 @@ class TreeNode(object):
         tree = TreeNodeDirectory(name, 0, 0, 0, [])
         for filename in sorted(os.listdir(root)):
             path = os.path.join(root, filename)
-            if not self.isExcluded(path, excludePatterns):
+            if not FilenameMatcher.match(path, excludePatterns):
                 if os.path.isdir(path):
-                    try:
+#                    try:
                         if not os.path.islink(path):
-                            node = self._createTree(path, name + os.path.sep + filename, excludePatterns)
+                            node = TreeNodeDirectory.createTreeFromFilesystem(path, name + os.path.sep + filename, excludePatterns)
                             if node.numberOfFiles > 0:
                                 tree.size = tree.size + node.size
                                 tree.lastModified = max(tree.lastModified, node.lastModified)
                                 tree.numberOfFiles = tree.numberOfFiles + node.numberOfFiles
                                 tree.files.append(node)
-                        else:
-                            self.logger.log('skipping symbolic link ' + path)
-                            self._errors.append('skipping symbolic link ' + path)
-                    except IOError, e:
-                        self.logger.log('could not enter directory: ' + path + ':')
-                        self.logger.log('> %s' % e)
-                        self._errors.append('could not enter directory: ' + path + ': %s' % e)
+#                        else:
+#                            self.logger.log('skipping symbolic link ' + path)
+#                            self._errors.append('skipping symbolic link ' + path)
+ #                   except IOError, e:
+#                        self.logger.log('could not enter directory: ' + path + ':')
+#                        self.logger.log('> %s' % e)
+ #                       self._errors.append('could not enter directory: ' + path + ': %s' % e)
                 elif os.path.isfile(path):
-                    try:
+       #             try:
                         size = os.path.getsize(path)
                         if size > 0:
                             lastModified = os.path.getmtime(path)
@@ -47,13 +49,13 @@ class TreeNode(object):
                             tree.size = tree.size + size
                             tree.lastModified = max(tree.lastModified, lastModified)
                             tree.numberOfFiles = tree.numberOfFiles + 1
-                    except IOError, e:
-                        self.logger.log('could not save: ' + path + ': %s' % e)
-                        self._errors.append('could not encrypt ' + path + ': %s' % e )
-                else:
-                    self.logger.log('skipping strange file: {0}'.format(path))
-            else:
-                self.logger.log('ignoring: ' + path)
+                    #except IOError, e:
+  #                      self.logger.log('could not save: ' + path + ': %s' % e)
+  #                      self._errors.append('could not encrypt ' + path + ': %s' % e )
+   #             else:
+   #                 self.logger.log('skipping strange file: {0}'.format(path))
+   #         else:
+   #             self.logger.log('ignoring: ' + path)
          
         return tree
     
