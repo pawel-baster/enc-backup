@@ -4,11 +4,10 @@ Created on Apr 9, 2013
 @author: pb
 '''
 
-import fnmatch
+import datetime
 import os
 
 from controllerInterface import ControllerInterface
-from encbackup.structures.tree import TreeNodeFile, TreeNodeDirectory
 
 class TreeStoreBackupController(ControllerInterface):
     '''
@@ -36,16 +35,31 @@ class TreeStoreBackupController(ControllerInterface):
 #         self.lockFileName = os.path.join(dataFolder, datetime.datetime.today().strftime('%Y%m%d.lock'))
 #         self._errors = []
 
-    def runBackup(self, inputFolder, outputFolder, excludePatterns, updateEvery) :
+    def loadState(self, inputFolder):
+        raise Exception('not implemented')
+    
+    def saveState(self, inputFolder, state):
+        raise Exception('not implemented')
+    
+    def isUpdatePending(self, state, updateEvery):
+        raise Exception('not implemented')
+    
+    def backupFolder(self, inputFolder, outputFolder, excludePatterns, stats):
+        raise Exception('not implemented')
+    
+    def printStats(self, stats):
+        raise Exception('not implemented')
+
+    def runBackup(self, inputFolders, outputFolder, excludePatterns, updateEvery) :
         if self.lock.acquireLock():
             try:
-                state = self.loadState(inputFolder)
+                state = self.loadState(outputFolder)
                 if self.isUpdatePending(state, updateEvery):
-                    self.logger.log('last successful backup at {0}'.format(datetime.datetime.fromtimestamp(stats['lastSearch']).strftime('%Y-%m-%d %H:%M:%S')))
+                    #self.logger.log('last successful backup at {0}'.format(datetime.datetime.fromtimestamp(stats['lastSearch']).strftime('%Y-%m-%d %H:%M:%S')))
                     stats = Stats()                    
                     for inputFolder in inputFolders:                            
                         if os.access(inputFolder, os.R_OK):
-                            self.backupFolder(state, inputFolder, outputFolder, excludePattern, stats)
+                            self.backupFolder(state, inputFolder, outputFolder, excludePatterns, stats)
                         else:
                             raise Exception('folder {0} does not exist or is inaccessible.'.format(inputFolder))
                 
@@ -57,7 +71,7 @@ class TreeStoreBackupController(ControllerInterface):
             except:
                 pass
             self.lock.releaseLock()
-        else
+        else:
             self.logger.log('Could not acquire lock')
    
     def runRestore(self, backupFoler, outputFolder) :
