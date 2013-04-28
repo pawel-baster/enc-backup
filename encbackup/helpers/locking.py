@@ -14,11 +14,11 @@ class SimpleLock:
     
     def acquireLock(self):        
         if os.path.exists(self.lockFileName):
-            return True
+            return False
         else:
             # create an empty file
             open(self.lockFileName, 'w').close()
-            return False
+            return True
 
     def releaseLock(self):
         for filename in glob.glob(os.path.join(os.path.dirname(self.lockFileName), '*.lock')) :

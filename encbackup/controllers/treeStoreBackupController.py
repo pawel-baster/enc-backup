@@ -4,64 +4,83 @@ Created on Apr 9, 2013
 @author: pb
 '''
 
-import fnmatch
 import os
+import time
 
-from controllerInterface import ControllerInterface
-from encbackup.structures.tree import TreeNodeFile, TreeNodeDirectory
+from abstractBackupController import AbstractBackupController
+from helpers.logging import Logger
+from structures.tree import TreeNodeDirectory
 
-class TreeStoreBackupController(ControllerInterface):
+class State:
+    pass
+
+class TreeStoreBackupController(AbstractBackupController):
     '''
     A backup controller that stores a tree of TreeNode objects 
     and compares it with the file system to prepare a list 
     of what has been added, removed or modified 
     '''
+    
+    def __init__(self, dataFolder, lock, serializer):
+        AbstractBackupController.__init__(self, lock)
+        self.treeFilePath = os.path.join(dataFolder, 'tree.dat')
+        self.serializer = serializer
 
-    def __init__( self, logger, lock, nameManager, backupProvider, synchronizer, dataFolder):
-          self.logger = logger
-          self.lock = lock
-#         self.nameManager = nameManager
-#         self.backupProvider = backupProvider
-#         self.synchronizer = synchronizer
-#         
-#         self.timestamp = int(time.time())
-#                 
-#         self.archivedFilesSize = 0;
-#         self.archivedFilesCount = 0
-#         
-#         self.mappingFilePath = os.path.join(dataFolder, 'mapping.dat')
-#         self.statsFilePath = os.path.join(dataFolder, 'stats.dat')
-#         self.mappingBackupFileName = '0x0'
-#         self.statsBackupFileName = '0x1'
-#         self.lockFileName = os.path.join(dataFolder, datetime.datetime.today().strftime('%Y%m%d.lock'))
-#         self._errors = []
-
-    def runBackup(self, inputFolder, outputFolder, excludePatterns, updateEvery) :
-        if self.lock.acquireLock():
-            try:
-                state = self.loadState(inputFolder)
-                if self.isUpdatePending(state, updateEvery):
-                    self.logger.log('last successful backup at {0}'.format(datetime.datetime.fromtimestamp(stats['lastSearch']).strftime('%Y-%m-%d %H:%M:%S')))
-                    stats = Stats()                    
-                    for inputFolder in inputFolders:                            
-                        if os.access(inputFolder, os.R_OK):
-                            self.backupFolder(state, inputFolder, outputFolder, excludePattern, stats)
-                        else:
-                            raise Exception('folder {0} does not exist or is inaccessible.'.format(inputFolder))
-                
-                        self.printStats(stats)
-                        self.saveState(state)
-                else:
-                    self.logger.log('backup not necessary at this moment')
-                    #self.logger.log('next no sooner than {0}'.format(datetime.datetime.fromtimestamp(stats['lastSearch'] + updateEvery).strftime('%Y-%m-%d %H:%M:%S')))
-            except:
-                pass
-            self.lock.releaseLock()
-        else
-            self.logger.log('Could not acquire lock')
-   
-    def runRestore(self, backupFoler, outputFolder) :
-        raise Exception('not implemented')
+    def loadState(self):
+        if os.path.exists(self.treeFilePath) :
+            Logger.log("Reading state from %s" % self.treeFilePath)
+            return self.serializer.unserialize(self.treeFilePath)
+        else :
+            Logger.log("Creating new state object")
+            default = State()
+            default.lastCheck = 0
+            default.trees = {}
+            return default 
+    
+    def saveState(self, state):
+        Logger.log("Serializing state to %s" % self.treeFilePath)
+        self.serializer.serialize(self.treeFilePath, state)
+        #self.backupProvider.backup(filepath, backupName)             
         
-    def listFiles(self, settingsFile):
-        raise Exception('not implemented')
+    def isUpdatePending(self, state, updateEvery):
+        return state.lastCheck + updateEvery < int(time.time())
+    
+    def backupFolder(self, state, inputFolders, outputFolder, excludePatterns, stats):                
+        for folder in inputFolders:
+            Logger.log("Listing files in %s" % folder)
+            tree = TreeNodeDirectory.createTreeFromFilesystem(folder, os.path.basename(folder), excludePatterns)
+            if folder in state.trees:
+                (listOfRemoved, listOfAdded, listOfModified) = tree.compare(state.trees[folder])
+            else:
+                listOfAdded = tree.getAllFiles()
+                listOfRemoved = []
+                listOfModified = []
+                
+            for f in listOfAdded:
+                self.backupFile(f, stats)
+            
+            for f in listOfModified:
+                self.backupFile(f, stats)
+                
+            for f in listOfRemoved:
+                self.removeFile(f, stats)
+                
+            state.trees[folder] = tree                   
+       
+    def backupFile(self, f, stats):
+        Logger.log("Updating or adding file: %s" % f.path)
+        #dstName = self.nameManager.encodeName(f.path, state.mapping)
+        #self.backupProvider.backup(f.path, dstName)
+        stats.archivedFilesSize += f.size
+        stats.archivedFilesCount += 1
+        
+    def removeFile(self, f, stats):
+        Logger.log("Removing file: %s" % f.path)
+        #backupPath = os.path.join(self.backupProvider.getBackupFolder(), self.nameManager.encodeName(path, mapping))
+        #os.remove(backupPath)
+        #del state.mapping['mapping'][path]
+        stats.removedFilesSize += f.size
+        stats.removedFilesCount += 1    
+    
+    def printStats(self, stats):
+        pass

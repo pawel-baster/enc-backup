@@ -6,7 +6,7 @@ Created on 21-04-2013
 
 import os
 
-from encbackup.helpers.filenameMatcher import FilenameMatcher
+from helpers.filenameMatcher import FilenameMatcher
 
 class TreeNode(object):
     def __init__(self, path, lastModified, size):
@@ -134,7 +134,7 @@ class TreeNodeDirectory(TreeNode):
             if isinstance(fileobj, TreeNodeFile):
                 files.append(fileobj)
             else:
-                files = files.extend(fileobj.getAllFiles())
+                files.extend(fileobj.getAllFiles())
         return files
     
     def __str__(self):
