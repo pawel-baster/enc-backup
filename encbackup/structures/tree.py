@@ -81,29 +81,30 @@ class TreeNodeDirectory(TreeNode):
             i = 0
             j = 0
             while i < len(self.files) or j < len(other.files):
-                if i < len(self.files) and j < len(other.files):
-                    print("Comparing %s with %s" % (self.files[i].path, other.files[j].path))
-                else: 
-                    print("Comparing %d with %d" % (i, j))
+                #if i < len(self.files) and j < len(other.files):
+                    #print("Comparing %s with %s" % (self.files[i].path, other.files[j].path))
+                #else: 
+                    #print("Comparing %d with %d" % (i, j))
                 
                 if i >= len(self.files) or (j < len(other.files) and self.files[i].path > other.files[j].path):
                     if (isinstance(other.files[j], TreeNodeFile)):
                         listOfTheirs.append(other.files[j])
-                        print("Added %s to listOfTheirs" % other.files[j].path)
+                #        print("Added %s to listOfTheirs" % other.files[j].path)
                     else:
                         listOfTheirs.extend(other.files[j].getAllFiles())
                     
                     j = j + 1
                 elif j >= len(other.files) or (i < len(self.files) and self.files[i].path < other.files[j].path):
-                    print("Added %s to listOfOurs" % self.files[i].path)
-                    if (isinstance(other.files[j], TreeNodeFile)):
+                #    print("Added %s to listOfOurs" % self.files[i].path)
+                    if (isinstance(self.files[i], TreeNodeFile)):
                         listOfOurs.append(self.files[i])
                     else:
                         listOfOurs.extend(self.files[i].getAllFiles())
                     i = i + 1
                 else: 
-                    print("Deep comparing %s with %s" % (self.files[i].path, other.files[j].path))
+                #    print("Deep comparing %s with %s" % (self.files[i].path, other.files[j].path))
                     if isinstance(self.files[i], TreeNodeDirectory) and isinstance(other.files[j], TreeNodeDirectory):
+                        #directory compare
                         if (self.files[i].size != other.files[j].size 
                                 or self.files[i].lastModified != other.files[j].lastModified
                                 or self.files[i].numberOfFiles != other.files[j].numberOfFiles):
@@ -112,19 +113,23 @@ class TreeNodeDirectory(TreeNode):
                             listOfOurs.extend(ours)
                             listOfModified.extend(modified)
                     elif isinstance(self.files[i], TreeNodeFile) and isinstance(other.files[j], TreeNodeFile):
+                        # modified file
                         if self.files[i].size != other.files[j].size or self.files[i].lastModified != other.files[j].lastModified:
+                            self.files[i].dstPath = other.files[j].dstPath
                             listOfModified.append(self.files[i])                            
                     elif isinstance(self.files[i], TreeNodeDirectory) and isinstance(other.files[j], TreeNodeFile):
+                        # directory -> file
                         listOfOurs.extend(self.files[i].getAllFiles())
                         listOfTheirs.append(other.files[j])
                     elif isinstance(self.files[i], TreeNodeFile) and isinstance(other.files[j], TreeNodeDirectory):
+						# file -> directory
                         listOfOurs.append(self.files[i])
                         listOfTheirs.extend(other.files[j].getAllFiles())
                                     
                     i = i + 1
                     j = j + 1
-        else:
-            print "nodes are identical, skipping recursion"
+        #else:
+          #  print "nodes are identical, skipping recursion"
         
         return (listOfTheirs, listOfOurs, listOfModified)
         
@@ -140,9 +145,18 @@ class TreeNodeDirectory(TreeNode):
     def __str__(self):
         string = "Directory: %s (modified: %d, size: %d, number of children: %d) Files:" % (self.path, self.lastModified, self.size, self.numberOfFiles)
         for f in self.files:
-            string = string + "\n" + str(f)
+            string = string + "\n" + f.printRecursively()
+        return string
+    
+    def printRecursively(self, indent=0):
+        string = ' ' * indent + "Directory: %s (modified: %d, size: %d, number of children: %d) Files:" % (self.path, self.lastModified, self.size, self.numberOfFiles)
+        for f in self.files:
+            string = string + "\n" + f.printRecursively(indent + 2)
         return string
 
 class TreeNodeFile(TreeNode):
     def __str__(self):
-        return "File: %s (modified: %d, size: %d)" % (self.path, self.lastModified, self.size)
+        return "File: %s (modified: %d, size: %d, encypted path: %s)" % (self.path, self.lastModified, self.size, self.dstPath if hasattr(self, 'dstPath') else 'n/a')
+    
+    def printRecursively(self, indent=0):
+        return ' ' * indent + str(self)

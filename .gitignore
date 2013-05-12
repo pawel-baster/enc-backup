@@ -29,3 +29,5 @@ pip-log.txt
 
 config.py
 src/config/
+
+*~

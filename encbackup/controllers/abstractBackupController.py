@@ -13,11 +13,14 @@ from controllerInterface import ControllerInterface
 
 class Stats:
     def __init__(self):
-        self.archivedFilesSize = 0
-        self.archivedFilesCount = 0
+        self.addedFilesSize = 0
+        self.addedFilesCount = 0
+        
+        self.updatedFilesSize = 0
+        self.updatedFilesCount = 0
         
         self.removedFilesSize = 0
-        self.archivedFilesCount = 0 
+        self.removedFilesCount = 0 
 
 class AbstractBackupController(ControllerInterface):
     '''
@@ -27,10 +30,10 @@ class AbstractBackupController(ControllerInterface):
     '''
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, lock):
+    def __init__(self, lock, nameManager, backupProvider):
         self.lock = lock
-#         self.nameManager = nameManager
-#         self.backupProvider = backupProvider
+        self.nameManager = nameManager
+        self.backupProvider = backupProvider
 #         self.synchronizer = synchronizer
 #         
 #         self.timestamp = int(time.time())

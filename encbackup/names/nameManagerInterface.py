@@ -6,8 +6,6 @@ Created on 2012-01-11
 
 class NameManagerInterface:
     
-    def encodeName( self, path, settings ):
+    def encodeName( self, path, state ):
         raise NotImplementedError( "Should have implemented this" )
     
-    def decodeName( self, path, settings ):
-        raise NotImplementedError( "Should have implemented this" )

@@ -7,12 +7,12 @@ Created on 2012-01-11
 import os
 import subprocess
 import shlex 
+from helpers.logging import Logger
 from backupProviderInterface import BackupProviderInterface
 
 class EncryptedBackupProvider(BackupProviderInterface):
   
-    def __init__(self, logger, backupFolder, passphrasePath):
-        self.logger = logger
+    def __init__(self, backupFolder, passphrasePath):
         self.backupFolder = backupFolder
         self.passphrasePath = passphrasePath
         if not os.path.exists(passphrasePath):
@@ -42,7 +42,7 @@ class EncryptedBackupProvider(BackupProviderInterface):
             os.close(fd)
         
         assert os.path.exists(dst) and os.path.getsize(dst) > 0, 'File {0} not saved correctly'.format(dst)
-        self.logger.log('+ Encrypted {src} and saved as {dst}'.format(src=srcName, dst=dst))
+        Logger.log('+ Encrypted {src} and saved as {dst}'.format(src=srcName, dst=dst))
   
     def restore(self, src, dst) :
         try:
@@ -62,7 +62,7 @@ class EncryptedBackupProvider(BackupProviderInterface):
         finally:
             os.close(fd)  
         
-        self.logger.log('Decrypted {src} and saved as {dst}'.format(src=src, dst=dst))
+        Logger.log('Decrypted {src} and saved as {dst}'.format(src=src, dst=dst))
         
     def _createDirsForFile(self, filename):
         d = os.path.dirname(filename)

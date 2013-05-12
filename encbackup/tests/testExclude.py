@@ -4,15 +4,13 @@ Created on 05-05-2012
 @author: pawel
 '''
 import unittest
-from encbackup.controllers.basicBackupController import BasicBackupController
+from encbackup.helpers.filenameMatcher import FilenameMatcher
 
-class BasicControllerExcludeTest(unittest.TestCase):
-
-    def setUp(self):        
-        self.backup = BasicBackupController(None, None, None, None, '')
+class ExcludeTest(unittest.TestCase):
 
     def testExclude(self):
-        excludePatterns = ['*~', '*.bak' , '*.old', '*/cache/*', '*/Cache/*', '/home/pawel/dev/python/.metadata/.plugins/*']
+        excludePatterns = ['*~', '*.bak' , '*.old', '*/cache/*', '*/Cache/*', '*/.metadata/*',
+                           '/home/pawel/dev/python/.metadata/.plugins/*']
         cases = {
             '/tmp/file' : False,
             '/tmp/file.bak' : True,
@@ -21,9 +19,10 @@ class BasicControllerExcludeTest(unittest.TestCase):
             '/home/pawel/dev/python/.metadata/.plugins/com.python.pydev.analysis/python_v1_3tswbhuj9gc4kibexhrzgzdx/v1_indexcache/twisted.test.test_iutils_1q40.v1_indexcache' : True,
             '/home/pawel/dev/python/encbackup/encbackup/synchronizers/__init__.py' : False,
             '/home/pawel/Obrazy/2011/Dania/Skagen/IMG_0093.JPG' : False,
+            '/home/pb/synced/dev/python/.metadata/.plugins/com.python.pydev.analysis/python_v1_3tswbhuj9gc4kibexhrzgzdx/v1_indexcache/gi.overrides.Dee_5bit.v1_indexcache' : True
         }
         for case, isExcluded in cases.items():
-            self.assertEquals(isExcluded, self.backup.isExcluded(case, excludePatterns), 'file ' + case + ' is not filtered correctly')
+            self.assertEquals(isExcluded, FilenameMatcher.match(case, excludePatterns), 'file ' + case + ' is not filtered correctly')
 
 
 
