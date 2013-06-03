@@ -7,12 +7,10 @@ Created on 2012-01-11
 
 import sys
 import os
-import pprint
 
 from controllers.treeStoreBackupController import TreeStoreBackupController
 from names.hexNumbersNameManager import HexNumbersNameManager
 from savers.encryptedBackupProvider import EncryptedBackupProvider
-#from synchronizers.lftpSynchronizer import LftpSynchronizer
 from helpers.serialize import PickleSerializer
 from helpers.locking import SimpleLock
 from helpers.logging import Logger

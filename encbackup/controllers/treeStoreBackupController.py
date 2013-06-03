@@ -9,7 +9,7 @@ import time
 
 from abstractBackupController import AbstractBackupController
 from helpers.logging import Logger
-from structures.tree import TreeNodeDirectory
+from structures.tree import TreeNodeDirectory, TreeNodeFile
 
 class State:
     pass
@@ -47,13 +47,16 @@ class TreeStoreBackupController(AbstractBackupController):
     def isUpdatePending(self, state, updateEvery):
         return state.lastCheck + updateEvery < int(time.time())
     
-    def backupFolder(self, state, inputFolders, outputFolder, excludePatterns, stats):                
+    def backupFolders(self, state, inputFolders, outputFolder, excludePatterns, stats):
+        totalNumberOfFiles = 0
+        totalSize = 0                
         for folder in inputFolders:
             Logger.log("Listing files in %s" % folder)
             tree = TreeNodeDirectory.createTreeFromFilesystem(folder, os.path.basename(folder), excludePatterns)
             if folder in state.trees:
+                state.trees[folder].ensureDstPathOnAll()
                 Logger.log("Comparing files in %s" % folder)
-                (listOfRemoved, listOfAdded, listOfModified) = tree.compare(state.trees[folder])
+                (listOfRemoved, listOfAdded, listOfModified) = tree.merge(state.trees[folder])
             else:
                 Logger.log("Adding all files from new folder %s" % folder)
                 listOfAdded = tree.getAllFiles()
@@ -64,16 +67,24 @@ class TreeStoreBackupController(AbstractBackupController):
                 
             for f in listOfAdded:
                 self.addFile(upFolder, f, state, stats)
+                if f.dstPath is None: raise Exception('error')
                             
             for f in listOfModified:
                 self.updateFile(upFolder, f, stats)
+                if f.dstPath is None: raise Exception('error')
                 
             for f in listOfRemoved:
                 self.removeFile(upFolder, f, stats)
+                if f.dstPath is None: raise Exception('error')
                 
+            tree.ensureDstPathOnAll()
             state.trees[folder] = tree
-            Logger.log("folder %s:" % folder)
-            Logger.log("Number of files: %d, size: %.2f MB" % (tree.numberOfFiles, tree.size/1024/1024))                   
+            totalNumberOfFiles += tree.numberOfFiles
+            totalSize += tree.size
+            
+        state.lastCheck = int(time.time())            
+        Logger.log("folder %s:" % folder)
+        Logger.log("Number of files: %d, size: %.2f MB" % (totalNumberOfFiles, totalSize/1024/1024))     
        
     def addFile(self, folder, f, state, stats):
         Logger.log("Updating or adding file: %s" % f.path)
@@ -83,18 +94,36 @@ class TreeStoreBackupController(AbstractBackupController):
         self.backupProvider.backup(os.path.join(folder, f.path), f.dstPath)        
         
     def updateFile(self, folder, f, stats):
+        assert f.dstPath is not None, "missing dstPath for updated file: " + str(f)
         Logger.log("Updating or adding file: %s" % f.path)
         stats.updatedFilesSize += f.size
         stats.updatedFilesCount += 1
         self.backupProvider.backup(os.path.join(folder, f.path), f.dstPath)
         
     def removeFile(self, folder, f, stats):
+        assert f.dstPath is not None, "missing dstPath for removed file: " + str(f)
         Logger.log("Removing file: %s" % f.path)
         stats.removedFilesSize += f.size
         stats.removedFilesCount += 1
-        os.remove(f.dstPath)
+        self.backupProvider.remove(f.dstPath)
     
     def printStats(self, stats):
         Logger.log("Added %d files (%.2f MB)" % (stats.addedFilesCount, stats.addedFilesSize/1024/1024))
         Logger.log("Updated %d files (%.2f MB)" % (stats.updatedFilesCount, stats.updatedFilesSize/1024/1024))
         Logger.log("Removed %d files (%.2f MB)" % (stats.removedFilesCount, stats.removedFilesSize/1024/1024))
+        
+    def restoreFolders(self, state, backupFolder, outputFolder):
+        for tree in state.trees.values():
+            self.restoreFolder(tree, backupFolder, outputFolder)
+            
+    def restoreFolder(self, tree, backupFolder, outputFolder):
+        for node in tree.files:
+            if isinstance(node, TreeNodeFile):
+                backupFileName = os.path.join(backupFolder, node.dstPath)
+                restoredFileName = os.path.join(outputFolder, node.path)
+                self.backupProvider.restore(backupFileName, restoredFileName)
+            elif isinstance(node, TreeNodeDirectory):
+                self.restoreFolder(node, backupFolder, outputFolder)
+            else:
+                raise Exception('Unexpected node type')
+            

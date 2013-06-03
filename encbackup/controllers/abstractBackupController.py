@@ -5,8 +5,6 @@ Created on Apr 9, 2013
 '''
 
 import abc
-import datetime
-import os
 
 from helpers.logging import Logger
 from controllerInterface import ControllerInterface
@@ -61,7 +59,11 @@ class AbstractBackupController(ControllerInterface):
         raise Exception('not implemented')
     
     @abc.abstractmethod
-    def backupFolder(self, inputFolder, outputFolder, excludePatterns, stats):
+    def backupFolders(self, inputFolder, outputFolder, excludePatterns, stats):
+        raise Exception('not implemented')
+    
+    @abc.abstractmethod
+    def restoreFolders(self, state, backupFolder, outputFolder):
         raise Exception('not implemented')
     
     @abc.abstractmethod
@@ -77,14 +79,9 @@ class AbstractBackupController(ControllerInterface):
                 Logger.log("update pending")
                 #Logger.log('last successful backup at {0}'.format(datetime.datetime.fromtimestamp(stats['lastSearch']).strftime('%Y-%m-%d %H:%M:%S')))
                 stats = Stats()                    
-                for inputFolder in inputFolders:                            
-                    if os.access(inputFolder, os.R_OK):
-                        self.backupFolder(state, inputFolders, outputFolder, excludePatterns, stats)
-                    else:
-                        raise Exception('folder {0} does not exist or is inaccessible.'.format(inputFolder))
-            
-                    self.printStats(stats)
-                    self.saveState(state)
+                self.backupFolders(state, inputFolders, outputFolder, excludePatterns, stats)
+                self.printStats(stats)
+                self.saveState(state)
             else:
                 Logger.log('backup not necessary at this moment')
                 #Logger.log('next no sooner than {0}'.format(datetime.datetime.fromtimestamp(stats['lastSearch'] + updateEvery).strftime('%Y-%m-%d %H:%M:%S')))
@@ -95,8 +92,18 @@ class AbstractBackupController(ControllerInterface):
         else:
             Logger.log('Could not acquire lock')
    
-    def runRestore(self, backupFoler, outputFolder) :
-        raise Exception('not implemented')
+    def runRestore(self, backupFolder, outputFolder) :
+        if self.lock.acquireLock():
+            Logger.log("Lock acquired")
+            #try:
+            state = self.loadState()
+            self.restoreFolders(state, backupFolder, outputFolder)
+        #except Exception, e:
+            #    Logger.log("Error: %s" % e)
+            #    raise e
+            self.lock.releaseLock()
+        else:
+            Logger.log('Could not acquire lock')
         
     def listFiles(self, settingsFile):
         raise Exception('not implemented')

@@ -4,7 +4,7 @@ Created on 05-05-2012
 @author: pawel
 '''
 import unittest
-from encbackup.helpers.filenameMatcher import FilenameMatcher
+from helpers.filenameMatcher import FilenameMatcher
 
 class ExcludeTest(unittest.TestCase):
 

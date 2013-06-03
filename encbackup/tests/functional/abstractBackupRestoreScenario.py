@@ -9,7 +9,7 @@ import random
 import base64
 import filecmp
 
-from encbackup.simpleLogger import SimpleLogger
+from helpers.logging import Logger
 
 class MockSynchronizer:
     def synchronize(self, settings):
@@ -28,7 +28,7 @@ class AbstractBackupRestoreScenario:
         os.mkdir(os.path.join(self.root, 'store'))
         
         passphrase = self._createRandomFile(self.root, '_passphrase')
-        logger = SimpleLogger() 
+        logger = Logger() 
         self.backup = self._getInstance(logger, os.path.join(self.root, 'data'), os.path.join(self.root, 'store'), passphrase) 
    
     def _getInstance(self, logger, dataFolder, storeFolder, passphrase):
@@ -63,8 +63,8 @@ class AbstractBackupRestoreScenario:
     def _testDelete(self):
         print 'deleting a file'
         shutil.rmtree(os.path.join(self.root, 'backup', 'new'))
-        mapping = self.backup._loadSettingsFile(self.backup.mappingFilePath + '_backup', None)
-        self.backup.cleanup(['*_ignored'], mapping, True)        
+        #mapping = self.backup._loadSettingsFile(self.backup.mappingFilePath + '_backup', None)
+        #self.backup.cleanup(['*_ignored'], mapping, True)        
         self._check()
 
     def _check(self):
@@ -75,8 +75,8 @@ class AbstractBackupRestoreScenario:
                                ['*_ignored'], 
                                0)
         #backup mapping file for later usage:
-        shutil.copyfile(self.backup.mappingFilePath, self.backup.mappingFilePath + '_backup')
-        self.backup.runRestore(os.path.join(self.root, 'data'),
+        #shutil.copyfile(self.backup.mappingFilePath, self.backup.mappingFilePath + '_backup')
+        self.backup.runRestore(os.path.join(self.root, 'store'),
                                os.path.join(self.root, 'restore'))
         self._compare();
         
