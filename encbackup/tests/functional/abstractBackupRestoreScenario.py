@@ -8,6 +8,7 @@ import shutil
 import random
 import base64
 import filecmp
+import datetime
 
 from helpers.logging import Logger
 
@@ -26,6 +27,7 @@ class AbstractBackupRestoreScenario:
         os.mkdir(os.path.join(self.root, 'backup'))
         os.mkdir(os.path.join(self.root, 'restore'))
         os.mkdir(os.path.join(self.root, 'store'))
+        self.mtime = 1000000
         
         passphrase = self._createRandomFile(self.root, '_passphrase')
         logger = Logger() 
@@ -78,8 +80,15 @@ class AbstractBackupRestoreScenario:
         #shutil.copyfile(self.backup.mappingFilePath, self.backup.mappingFilePath + '_backup')
         self.backup.runRestore(os.path.join(self.root, 'store'),
                                os.path.join(self.root, 'restore'))
-        self._compare();
+        self._compare()
+        self._checkTimes()
         
+    def _checkTimes(self):
+        for root, dirs, files in os.walk(os.path.join(self.root, 'restore')):
+            for name in files:
+                filename = os.path.join(root, name)
+                assert self.mtime == os.path.getmtime(filename), 'Time mismatch for file: ' + filename
+            
     def _compareFilesContent(self, path1, path2):
         self.assertTrue(filecmp.cmp(path1, path2, False), 'files not identical: ' + path1 + ' and ' + path2)
     
@@ -129,6 +138,7 @@ class AbstractBackupRestoreScenario:
         f = open(name, 'w' )
         f.write( self._createRandomContent() )
         f.close()
+        os.utime(name, (self.mtime, self.mtime))
         return name
 
     def _createRandomFileName(self):

@@ -122,6 +122,7 @@ class TreeStoreBackupController(AbstractBackupController):
                 backupFileName = os.path.join(backupFolder, node.dstPath)
                 restoredFileName = os.path.join(outputFolder, node.path)
                 self.backupProvider.restore(backupFileName, restoredFileName)
+                os.utime(restoredFileName, (node.lastModified, node.lastModified))
             elif isinstance(node, TreeNodeDirectory):
                 self.restoreFolder(node, backupFolder, outputFolder)
             else:
