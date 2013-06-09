@@ -32,37 +32,16 @@ if __name__ == '__main__':
             sys.exit()     
          
         if sys.argv[1] == 'backup' :
-            #backup = BasicBackupController(
-            #    logger,
-            #    LftpSynchronizer(logger, config.mirrorTo, config.storeBackupFolder, config.ftpSslVerification),
-            #    config.dataPath)
-            #config.excludePatterns.append(config.storeBackupFolder);        
-            #backup.runBackup(config.foldersToBackup, config.storeBackupFolder, config.excludePatterns, config.updateBackupEvery)
             controller = TreeStoreBackupController(config.dataPath, lock, serializer, nameManager, backupProvider)
             controller.runBackup(config.foldersToBackup, config.storeBackupFolder, config.excludePatterns, config.updateBackupEvery)
         elif sys.argv[1] == 'ls' :
-            if len(sys.argv) == 3:
-                #controller = TreeStoreBackupController(config.dataPath, lock, serializer, nameManager, backupProvider)
-                #controller.printTree(sys.argv[2])
-                tree = serializer.unserialize(os.path.join(config.dataPath, 'tree.dat'))
-                for name, tree in tree.trees.items():
-                    print tree
-                    #for file in folder.files:
-                    #    print file
-                #pp.pprint(tree)
-                
-            else: 
-                print 'ls expects one argument'
-                
+            state = serializer.unserialize(os.path.join(config.dataPath, 'tree.dat'))
+            for tree in state.trees.values():
+                for f in tree.getAllFiles():
+                    print f.path
+                      
         elif sys.argv[1] == 'restore' :
             if len(sys.argv) == 5:
-                #backup = BasicBackupController(
-                #    logger,
-                #    SubDirNumberNameManager2(), 
-                #    EncryptedBackupProvider(logger, sys.argv[2], sys.argv[4]),
-                #    LftpSynchronizer(logger, '', ''),
-                #    '/tmp')
-                #backup.runRestore(sys.argv[2], sys.argv[3])
                 pass
             else:
                 print 'you need to specify input and output folder and passphrase file path for restore'

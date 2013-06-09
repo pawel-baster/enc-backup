@@ -31,3 +31,4 @@ config.py
 src/config/
 
 *~
+data
